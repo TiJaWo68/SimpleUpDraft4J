@@ -14,7 +14,8 @@ public class GithubReleaseSourceTest {
                 "  \"body\": \"New features!\\n- Bugfixes\",\n" +
                 "  \"assets\": [\n" +
                 "    {\n" +
-                "      \"browser_download_url\": \"https://github.com/test/test/releases/download/v1.2.3/test.jar\"\n" +
+                "      \"browser_download_url\": \"https://github.com/test/test/releases/download/v1.2.3/test.tar.gz\"\n"
+                +
                 "    }\n" +
                 "  ]\n" +
                 "}";
@@ -24,7 +25,7 @@ public class GithubReleaseSourceTest {
 
         assertEquals("v1.2.3", info.version());
         assertEquals("New features!\n- Bugfixes", info.changelog());
-        assertEquals("https://github.com/test/test/releases/download/v1.2.3/test.jar", info.downloadUrl());
+        assertEquals("https://github.com/test/test/releases/download/v1.2.3/test.tar.gz", info.downloadUrl());
     }
 
     @Test

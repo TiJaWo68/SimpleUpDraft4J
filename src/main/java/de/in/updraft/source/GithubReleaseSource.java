@@ -32,11 +32,16 @@ public class GithubReleaseSource implements UpdateSource {
                 .build();
     }
 
+    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
+            .getLogger(GithubReleaseSource.class.getName());
+
     @Override
     public UpdateInfo fetchUpdate() throws IOException, InterruptedException {
         String url = channel == UpdateChannel.STABLE
                 ? String.format("https://api.github.com/repos/%s/%s/releases/latest", repoOwner, repoName)
                 : String.format("https://api.github.com/repos/%s/%s/releases", repoOwner, repoName);
+
+        LOGGER.info("Fetching update from: " + url + " (Channel: " + channel + ")");
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -46,19 +51,29 @@ public class GithubReleaseSource implements UpdateSource {
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() == 404) {
+            LOGGER.warning("No releases found (404) at " + url);
             return null; // No releases found
         }
         if (response.statusCode() != 200) {
+            LOGGER.severe("GitHub API returned status " + response.statusCode());
             throw new IOException("GitHub API returned status " + response.statusCode());
         }
 
         String json = response.body();
+        UpdateInfo info;
         if (channel == UpdateChannel.STABLE) {
-            return parseOne(json);
+            info = parseOne(json);
         } else {
             // Take the first one from the list (array starts with [)
-            return parseFirst(json);
+            info = parseFirst(json);
         }
+
+        if (info != null) {
+            LOGGER.info("Found version: " + info.version());
+        } else {
+            LOGGER.info("No version found in response.");
+        }
+        return info;
     }
 
     private UpdateInfo parseFirst(String jsonArray) throws IOException {
