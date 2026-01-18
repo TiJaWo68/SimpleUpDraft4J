@@ -2,6 +2,8 @@ package de.in.updraft.ui;
 
 import de.in.updraft.GithubUpdater;
 import de.in.updraft.UpdateInfo;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,6 +14,8 @@ import java.awt.*;
  * @author TiJaWo68 in cooperation with Gemini 3 Flash using Antigravity
  */
 public class SimpleSwingUpdater {
+    private static final Logger LOGGER = LogManager.getLogger(SimpleSwingUpdater.class);
+
     private final GithubUpdater updater;
 
     public SimpleSwingUpdater(GithubUpdater updater) {
@@ -51,7 +55,7 @@ public class SimpleSwingUpdater {
                 try {
                     updater.performUpdate(info);
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    LOGGER.error("Update failed", ex);
                     SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(null,
                             "Update failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE));
                 }
