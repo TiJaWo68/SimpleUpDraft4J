@@ -4,6 +4,8 @@ import de.in.updraft.util.Version;
 
 import java.io.IOException;
 
+import java.nio.file.Path;
+
 /**
  * Main class for managing updates.
  * 
@@ -14,10 +16,10 @@ public class GithubUpdater {
     private final UpdateSource source;
     private final UpdateRunner runner;
 
-    public GithubUpdater(String currentVersion, UpdateSource source) {
+    public GithubUpdater(String currentVersion, UpdateSource source, Path applicationJar) {
         this.currentVersion = currentVersion;
         this.source = source;
-        this.runner = new UpdateRunner();
+        this.runner = new UpdateRunner(applicationJar);
     }
 
     /**

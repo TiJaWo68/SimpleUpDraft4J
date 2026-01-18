@@ -1,5 +1,8 @@
 package de.in.updraft;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -16,15 +19,13 @@ import java.util.List;
  * @author TiJaWo68 in cooperation with Gemini 3 Flash using Antigravity
  */
 public class UpdateRunner {
+    private static final Logger LOGGER = LogManager.getLogger(UpdateRunner.class);
+
     private final Path currentJar;
     private final HttpClient httpClient;
 
-    public UpdateRunner() {
-        try {
-            this.currentJar = Paths.get(UpdateRunner.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to determine current JAR path", e);
-        }
+    public UpdateRunner(Path applicationJar) {
+        this.currentJar = applicationJar;
         this.httpClient = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
@@ -33,7 +34,7 @@ public class UpdateRunner {
     public void downloadAndUpdate(UpdateInfo info) throws IOException, InterruptedException {
         Path tempJar = Files.createTempFile("updraft-new-", ".jar");
 
-        System.out.println("Downloading update from: " + info.downloadUrl());
+        LOGGER.info("Downloading update from: {}", info.downloadUrl());
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(info.downloadUrl())).GET().build();
         HttpResponse<Path> response = httpClient.send(request, HttpResponse.BodyHandlers.ofFile(tempJar));
 
@@ -54,7 +55,7 @@ public class UpdateRunner {
         String backupName = fileName.replace(".jar", "") + "-backup.jar";
         Path backupPath = currentJar.getParent().resolve(backupName);
         Files.copy(currentJar, backupPath, StandardCopyOption.REPLACE_EXISTING);
-        System.out.println("Backup created at: " + backupPath);
+        LOGGER.info("Backup created at: {}", backupPath);
         return backupPath;
     }
 
@@ -83,7 +84,7 @@ public class UpdateRunner {
             scriptPath = createUnixScript(updateFile);
         }
 
-        System.out.println("Starting update script and exiting...");
+        LOGGER.info("Starting update script and exiting...");
         ProcessBuilder pb = new ProcessBuilder();
         if (isWindows) {
             pb.command("cmd.exe", "/c", scriptPath.toAbsolutePath().toString());
