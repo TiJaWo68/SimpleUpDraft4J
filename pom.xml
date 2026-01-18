@@ -5,7 +5,7 @@
 
     <groupId>de.in</groupId>
     <artifactId>SimpleUpDraft4J</artifactId>
-    <version>0.0.1</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
 
     <name>SimpleUpDraft4J</name>
@@ -16,6 +16,14 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub TiJaWo68 Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/TiJaWo68/SimpleUpDraft4J</url>
+		</repository>
+	</distributionManagement>
 
     <dependencies>
         <dependency>
