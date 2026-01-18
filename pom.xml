@@ -4,8 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.in</groupId>
-    <artifactId>SimpleUpDraft4J</artifactId>
-    <version>0.1.5</version>
+    <artifactId>simpleupdraft4j</artifactId>
+    <version>0.1.6</version>
     <packaging>jar</packaging>
 
     <name>SimpleUpDraft4J</name>
