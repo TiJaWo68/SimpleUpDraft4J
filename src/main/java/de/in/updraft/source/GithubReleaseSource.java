@@ -93,13 +93,33 @@ public class GithubReleaseSource implements UpdateSource {
     }
 
     protected String extractDownloadUrl(String json) {
+        boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
         // Look for browser_download_url in assets
-        // GitHub assets are in a list, we just take the first .jar we find
-        Pattern pattern = Pattern.compile("\"browser_download_url\"\\s*:\\s*\"([^\"]+\\.jar)\"");
+        // We look for tar.gz on Linux/Mac and .7z/.zip on Windows
+        String regex;
+        if (isWindows) {
+            // Prioritize zip as it's the standard now
+            regex = "\"browser_download_url\"\\s*:\\s*\"([^\"]+\\.zip)\"";
+        } else {
+            regex = "\"browser_download_url\"\\s*:\\s*\"([^\"]+\\.tar\\.gz)\"";
+        }
+
+        Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(json);
         if (matcher.find()) {
             return matcher.group(1);
         }
+
+        // Fallback: if preferred format not found, look for any archive
+        if (isWindows) {
+            regex = "\"browser_download_url\"\\s*:\\s*\"([^\"]+\\.tar\\.gz)\"";
+            pattern = Pattern.compile(regex);
+            matcher = pattern.matcher(json);
+            if (matcher.find()) {
+                return matcher.group(1);
+            }
+        }
+
         return null;
     }
 }

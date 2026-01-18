@@ -41,8 +41,12 @@ public class UpdateRunner {
             throw new IOException("Failed to download update: HTTP " + response.statusCode());
         }
 
+        String fileName = info.downloadUrl().substring(info.downloadUrl().lastIndexOf('/') + 1);
+        Path updateFile = Files.createTempFile("updraft-update-", fileName);
+        Files.move(tempJar, updateFile, StandardCopyOption.REPLACE_EXISTING);
+
         Path backupPath = createBackup();
-        applyUpdate(tempJar, backupPath);
+        applyUpdate(updateFile, backupPath);
     }
 
     private Path createBackup() throws IOException {
@@ -69,14 +73,14 @@ public class UpdateRunner {
         applyUpdate(tempRevert, null);
     }
 
-    private void applyUpdate(Path newJar, Path backupPath) throws IOException {
+    private void applyUpdate(Path updateFile, Path backupPath) throws IOException {
         boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
         Path scriptPath;
 
         if (isWindows) {
-            scriptPath = createWindowsScript(newJar);
+            scriptPath = createWindowsScript(updateFile);
         } else {
-            scriptPath = createUnixScript(newJar);
+            scriptPath = createUnixScript(updateFile);
         }
 
         System.out.println("Starting update script and exiting...");
@@ -90,26 +94,52 @@ public class UpdateRunner {
         System.exit(0);
     }
 
-    private Path createWindowsScript(Path newJar) throws IOException {
+    private Path createWindowsScript(Path updateFile) throws IOException {
         Path script = Files.createTempFile("updraft-update-", ".bat");
         List<String> lines = new ArrayList<>();
         lines.add("@echo off");
         lines.add("timeout /t 2 /nobreak > nul"); // Wait for app to exit
-        lines.add("copy /y \"" + newJar.toAbsolutePath() + "\" \"" + currentJar.toAbsolutePath() + "\"");
-        lines.add("del \"" + newJar.toAbsolutePath() + "\"");
+
+        // If it's a jar, just copy. If it's an archive (zip), use tar.
+        // We use .zip for Windows to avoid 7z dependency. Modern Windows has tar.
+        String lower = updateFile.toString().toLowerCase();
+        if (lower.endsWith(".jar")) {
+            lines.add("copy /y \"" + updateFile.toAbsolutePath() + "\" \"" + currentJar.toAbsolutePath() + "\"");
+            lines.add("del \"" + updateFile.toAbsolutePath() + "\"");
+        } else {
+            // Attempt to extract to current directory (parent of currentJar)
+            // tar -xf archive -C destination
+            Path dest = currentJar.getParent();
+            lines.add("tar -xf \"" + updateFile.toAbsolutePath() + "\" -C \"" + dest.toAbsolutePath() + "\"");
+            lines.add("del \"" + updateFile.toAbsolutePath() + "\"");
+        }
+
         lines.add("start \"\" javaw -jar \"" + currentJar.toAbsolutePath() + "\"");
         lines.add("del \"%~f0\""); // Delete itself
         Files.write(script, lines);
         return script;
     }
 
-    private Path createUnixScript(Path newJar) throws IOException {
+    private Path createUnixScript(Path updateFile) throws IOException {
         Path script = Files.createTempFile("updraft-update-", ".sh");
         List<String> lines = new ArrayList<>();
         lines.add("#!/bin/sh");
         lines.add("sleep 2"); // Wait for app to exit
-        lines.add("cp -f \"" + newJar.toAbsolutePath() + "\" \"" + currentJar.toAbsolutePath() + "\"");
-        lines.add("rm \"" + newJar.toAbsolutePath() + "\"");
+
+        String lower = updateFile.toString().toLowerCase();
+        if (lower.endsWith(".jar")) {
+            lines.add("cp -f \"" + updateFile.toAbsolutePath() + "\" \"" + currentJar.toAbsolutePath() + "\"");
+            lines.add("rm \"" + updateFile.toAbsolutePath() + "\"");
+        } else if (lower.endsWith(".tar.gz") || lower.endsWith(".tgz")) {
+            // Extract tarball to parent dir of currentJar
+            // We assume the formatting of the archive is flat or has correct structure.
+            // Typically releases might be in a subdir. We act as if they extract over.
+            // tar -xzf archive -C dest
+            Path dest = currentJar.getParent();
+            lines.add("tar -xzf \"" + updateFile.toAbsolutePath() + "\" -C \"" + dest.toAbsolutePath() + "\"");
+            lines.add("rm \"" + updateFile.toAbsolutePath() + "\"");
+        }
+
         lines.add("java -jar \"" + currentJar.toAbsolutePath() + "\" &");
         lines.add("rm -- \"$0\""); // Delete itself
         Files.write(script, lines);
