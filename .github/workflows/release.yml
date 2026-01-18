@@ -25,14 +25,30 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: 'maven'
-        server-id: github
+        server-id: github # Matching the ID in pom.xml distributionManagement
+
+    - name: Create settings.xml
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        cat <<EOF > settings.xml
+        <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+          <servers>
+            <server>
+              <id>github</id>
+              <username>TiJaWo68</username>
+              <password>${{ secrets.PAT_TOKEN }}</password>
+            </server>
+          </servers>
+        </settings>
+        EOF
 
     - name: Build and Deploy to GitHub Packages
       if: startsWith(github.ref, 'refs/tags/')
-      run: mvn -B deploy -DskipTests --file pom.xml
+      run: mvn -B deploy -DskipTests --file pom.xml -s settings.xml
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
