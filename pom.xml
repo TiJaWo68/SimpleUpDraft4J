@@ -5,7 +5,7 @@
 
     <groupId>de.in</groupId>
     <artifactId>SimpleUpDraft4J</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
     <packaging>jar</packaging>
 
     <name>SimpleUpDraft4J</name>
@@ -21,7 +21,7 @@
 		<repository>
 			<id>github</id>
 			<name>GitHub TiJaWo68 Apache Maven Packages</name>
-			<url>https://maven.pkg.github.com/TiJaWo68/SimpleUpDraft4J</url>
+			<url>https://maven.pkg.github.com/TiJaWo68/simpleupdraft4j</url>
 		</repository>
 	</distributionManagement>
 
@@ -40,6 +40,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.1.2</version>
             </plugin>
         </plugins>
     </build>
