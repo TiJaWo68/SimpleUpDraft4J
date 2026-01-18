@@ -28,6 +28,7 @@ jobs:
         server-id: github
 
     - name: Build and Deploy to GitHub Packages
+      if: startsWith(github.ref, 'refs/tags/')
       run: mvn -B deploy -DskipTests --file pom.xml
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
