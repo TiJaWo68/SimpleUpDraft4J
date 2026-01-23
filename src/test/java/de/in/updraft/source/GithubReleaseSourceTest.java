@@ -5,6 +5,11 @@ import de.in.updraft.UpdateInfo;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Test class for {@link GithubReleaseSource}.
+ * 
+ * @author TiJaWo68 in cooperation with Gemini 3 Flash using Antigravity
+ */
 public class GithubReleaseSourceTest {
 
     @Test
