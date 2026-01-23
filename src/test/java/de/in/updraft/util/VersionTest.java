@@ -3,6 +3,11 @@ package de.in.updraft.util;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Test class for {@link Version}.
+ * 
+ * @author TiJaWo68 in cooperation with Gemini 3 Flash using Antigravity
+ */
 public class VersionTest {
 
     @Test
