@@ -74,7 +74,7 @@ public class UpdateRunner {
         applyUpdate(tempRevert, null);
     }
 
-    private void applyUpdate(Path updateFile, Path backupPath) throws IOException {
+    void applyUpdate(Path updateFile, Path backupPath) throws IOException {
         boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
         Path scriptPath;
 
@@ -95,33 +95,45 @@ public class UpdateRunner {
         System.exit(0);
     }
 
-    private Path createWindowsScript(Path updateFile) throws IOException {
+    Path createWindowsScript(Path updateFile) throws IOException {
         Path script = Files.createTempFile("updraft-update-", ".bat");
         List<String> lines = new ArrayList<>();
         lines.add("@echo off");
-        lines.add("timeout /t 2 /nobreak > nul"); // Wait for app to exit
+        lines.add("set \"target=" + currentJar.toAbsolutePath() + "\"");
+        lines.add("set \"max_tries=30\"");
+        lines.add("set \"counter=0\"");
+        lines.add(":wait_loop");
+        lines.add("if %counter% geq %max_tries% goto fail");
+        lines.add("set /a counter+=1");
+        lines.add("timeout /t 1 /nobreak > nul");
+        lines.add("move /y \"%target%\" \"%target%.old\" > nul 2>&1");
+        lines.add("if errorlevel 1 goto wait_loop");
+        lines.add("move /y \"%target%.old\" \"%target%\" > nul 2>&1");
 
-        // If it's a jar, just copy. If it's an archive (zip), use tar.
-        // We use .zip for Windows to avoid 7z dependency. Modern Windows has tar.
         String lower = updateFile.toString().toLowerCase();
         if (lower.endsWith(".jar")) {
-            lines.add("copy /y \"" + updateFile.toAbsolutePath() + "\" \"" + currentJar.toAbsolutePath() + "\"");
-            lines.add("del \"" + updateFile.toAbsolutePath() + "\"");
+            lines.add("copy /y \"" + updateFile.toAbsolutePath() + "\" \"%target%\"");
         } else {
-            // Attempt to extract to current directory (parent of currentJar)
-            // tar -xf archive -C destination
             Path dest = currentJar.getParent();
             lines.add("tar -xf \"" + updateFile.toAbsolutePath() + "\" -C \"" + dest.toAbsolutePath() + "\"");
-            lines.add("del \"" + updateFile.toAbsolutePath() + "\"");
         }
+        lines.add("del \"" + updateFile.toAbsolutePath() + "\"");
 
-        lines.add("start \"\" javaw -jar \"" + currentJar.toAbsolutePath() + "\"");
-        lines.add("del \"%~f0\""); // Delete itself
+        if (currentJar.toString().toLowerCase().endsWith(".exe")) {
+            lines.add("start \"\" \"%target%\"");
+        } else {
+            lines.add("start \"\" javaw -jar \"%target%\"");
+        }
+        lines.add("goto end");
+        lines.add(":fail");
+        lines.add("echo Failed to release file lock for update.");
+        lines.add(":end");
+        lines.add("del \"%~f0\"");
         Files.write(script, lines);
         return script;
     }
 
-    private Path createUnixScript(Path updateFile) throws IOException {
+    Path createUnixScript(Path updateFile) throws IOException {
         Path script = Files.createTempFile("updraft-update-", ".sh");
         List<String> lines = new ArrayList<>();
         lines.add("#!/bin/sh");
