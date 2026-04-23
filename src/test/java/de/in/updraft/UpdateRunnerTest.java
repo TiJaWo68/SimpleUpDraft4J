@@ -11,11 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UpdateRunnerTest {
 
-    @TempDir
-    Path tempDir;
-
     @Test
-    public void testWindowsScriptGenerationForExe() throws Exception {
+    public void testWindowsScriptGenerationForExe(@TempDir Path tempDir) throws Exception {
         Path fakeExe = tempDir.resolve("LogSyncPro.exe");
         Files.createFile(fakeExe);
         
@@ -37,7 +34,7 @@ public class UpdateRunnerTest {
     }
 
     @Test
-    public void testWindowsScriptGenerationForJar() throws Exception {
+    public void testWindowsScriptGenerationForJar(@TempDir Path tempDir) throws Exception {
         Path fakeJar = tempDir.resolve("LogSyncPro.jar");
         Files.createFile(fakeJar);
         
